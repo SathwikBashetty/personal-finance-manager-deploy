@@ -66,7 +66,15 @@ npm install
 npm start
 
 ```
+4 Database Setup (MySQL)
 
+Open the SQL file in the database/ folder.
+
+Copy the contents and paste it into MySQL Workbench.
+
+Run/compile the script to create the database and tables.
+
+After that, start the backend and frontend as usual.
 The app will be available at:
 
 👉 Frontend: `http://localhost:3000`
