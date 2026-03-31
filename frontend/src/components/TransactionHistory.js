@@ -1,41 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './TransactionHistory.css';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '../context/CurrencyContext';
 
-function TransactionHistory() {
-  const [transactions, setTransactions] = useState([]);
+function TransactionHistory({ transactions, loading, error, refreshTransactions }) {
   const [filter, setFilter] = useState('all');
   const [editIndex, setEditIndex] = useState(null);
   const [editData, setEditData] = useState({});
   const [dateFilterType, setDateFilterType] = useState('none');
   const [dateFilterValue, setDateFilterValue] = useState('');
   const navigate = useNavigate();
+  const { formatAmount } = useCurrency();
 
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
-
-  // ✅ Secure fetch with token
-  const fetchTransactions = async () => {
-    try {
-      const res = await fetch('http://localhost:8080/api/transactions/user', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem('token'),
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setTransactions(data);
-      } else {
-        alert("Failed to fetch transactions.");
-      }
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
+  // CSV Export Function
+  const downloadCSV = () => {
+    if (!transactions || transactions.length === 0) {
+      alert("No transactions to export.");
+      return;
     }
+
+    const headers = ["Date", "Type", "Amount", "Category", "Note"];
+    const rows = transactions.map(tx => [
+      tx.date,
+      tx.type,
+      tx.amount,
+      tx.category,
+      `"${tx.note || ''}"` // Quote note to handle commas
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "transactions.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
+  // Fetching is handled in App.js
 
   // ✅ Secure DELETE with token
   const handleDelete = async (index) => {
@@ -52,7 +61,7 @@ function TransactionHistory() {
 
       if (res.ok) {
         alert("Transaction deleted.");
-        fetchTransactions();
+        refreshTransactions();
       } else {
         alert("Failed to delete transaction.");
       }
@@ -85,7 +94,7 @@ function TransactionHistory() {
       if (res.ok) {
         alert("Transaction updated.");
         setEditIndex(null);
-        fetchTransactions();
+        refreshTransactions();
       } else {
         alert("Failed to update transaction.");
       }
@@ -102,9 +111,9 @@ function TransactionHistory() {
   // 🔍 Filtering
   const filteredTransactions = transactions.filter((tx) => {
     const matchesType = filter === 'all' || tx.type === filter;
-    const matchesDate = () => {
+      const matchesDate = () => {
       if (!dateFilterType || !dateFilterValue) return true;
-      const [dd, mm, yyyy] = tx.date.split('-');
+      const [, mm, yyyy] = tx.date.split('-');
       if (dateFilterType === 'date') return tx.date === dateFilterValue;
       if (dateFilterType === 'month') return `${yyyy}-${mm}` === dateFilterValue;
       if (dateFilterType === 'year') return yyyy === dateFilterValue;
@@ -115,7 +124,10 @@ function TransactionHistory() {
 
   return (
     <div className="history-container">
-      <h2>Transaction History</h2>
+      <div className="history-header">
+        <h2>Transaction History</h2>
+        <button className="export-btn" onClick={downloadCSV}>Export to CSV</button>
+      </div>
 
       {/* Filter by type */}
       <div className="filter-section">
@@ -216,7 +228,7 @@ function TransactionHistory() {
                 <tr key={tx.id}>
                   <td>{tx.date}</td>
                   <td>{tx.type}</td>
-                  <td>₹{tx.amount}</td>
+                  <td>{formatAmount(tx.amount)}</td>
                   <td>{tx.category}</td>
                   <td>{tx.note || '—'}</td>
                   <td>

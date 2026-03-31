@@ -1,6 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './App.css';
+import { CurrencyProvider } from './context/CurrencyContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(
+  <CurrencyProvider>
+    <App />
+  </CurrencyProvider>
+);

@@ -100,6 +100,14 @@ function Sidebar({ setView, setSelectedDate }) {
           <span className="button-icon">📝</span>
           Transaction History
         </button>
+
+        <button 
+          className={`menu-button ${activeButton === 'goals' ? 'active' : ''}`}
+          onClick={() => handleNavigation('/goals', 'goals')}
+        >
+          <span className="button-icon">🎯</span>
+          Savings Goals
+        </button>
       </div>
       
       <div className="divider"></div>

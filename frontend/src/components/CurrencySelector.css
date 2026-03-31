@@ -1,0 +1,43 @@
+.currency-selector-container {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.currency-dropdown {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+  appearance: none; /* Hide default arrow to use custom or just clean look */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  padding-right: 28px;
+}
+
+.currency-dropdown:hover {
+  background: var(--glass-border);
+  transform: translateY(-2px);
+}
+
+.currency-dropdown:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--input-focus);
+}
+
+/* For the actual dropdown options which are styled by OS, we just ensure text is dark so it's readable if OS doesn't respect CSS */
+.currency-dropdown option {
+  color: #1e293b;
+  background: white;
+  font-weight: 500;
+}

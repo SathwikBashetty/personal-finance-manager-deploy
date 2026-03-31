@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '../context/CurrencyContext';
+import CurrencySelector from './CurrencySelector';
 import './IncomeForm.css';
 
-function IncomeForm() {
+function IncomeForm({ onAdd }) {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('salary');
   const [note, setNote] = useState('');
   const navigate = useNavigate();
+  const { currency, convertToBase } = useCurrency();
 
   const getFormattedDate = () => {
     const today = new Date();
@@ -22,7 +25,7 @@ function IncomeForm() {
     }
 
     const newIncome = {
-      amount,
+      amount: convertToBase(amount),
       category,
       note,
       type: 'income',
@@ -41,7 +44,12 @@ function IncomeForm() {
 
       if (res.ok) {
         alert("Income added successfully!");
-        navigate('/dashboard');
+        if (onAdd) {
+          onAdd();
+          navigate('/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         alert("Failed to add income.");
       }
@@ -57,7 +65,10 @@ function IncomeForm() {
         <p className="form-subtitle">Record your new income source</p>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="amount">Amount (₹)</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <label htmlFor="amount" style={{ marginBottom: 0 }}>Amount ({currency})</label>
+              <CurrencySelector />
+            </div>
             <input
               type="number"
               id="amount"
@@ -67,7 +78,7 @@ function IncomeForm() {
               required
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="category">Category</label>
             <select
@@ -83,7 +94,7 @@ function IncomeForm() {
               <option value="other">Other</option>
             </select>
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="note">Note (Optional)</label>
             <input
@@ -94,7 +105,7 @@ function IncomeForm() {
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
-          
+
           <button type="submit" className="submit-btn income-btn">
             Add Income
           </button>

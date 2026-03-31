@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './Dashboard.css';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { useCurrency } from '../context/CurrencyContext';
+import CurrencySelector from './CurrencySelector';
+import AIInsights from './AIInsights';
 
-function Dashboard() {
+function Dashboard({ transactions, loading, error, refreshTransactions, toggleTheme, isDarkMode }) {
   const navigate = useNavigate();
-  const [transactions, setTransactions] = useState([]);
   const [view, setView] = useState('all');
   const [selectedDate, setSelectedDate] = useState('');
   const [showProfile, setShowProfile] = useState(false);
+  const { formatAmount } = useCurrency();
 
   const getUserEmailFromToken = () => {
     const token = localStorage.getItem("token");
@@ -27,24 +30,7 @@ function Dashboard() {
 
   const userEmail = getUserEmailFromToken();
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const res = await fetch('http://localhost:8080/api/transactions/user', {
-          method: "GET",
-          headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token")
-          }
-        });
-        const data = await res.json();
-        setTransactions(data);
-      } catch (error) {
-        console.error('Error fetching transactions:', error);
-      }
-    };
-
-    fetchTransactions();
-  }, []);
+  // Fetching is now handled in App.js
 
   const filteredTxns = transactions.filter(tx => {
     if (!tx.date) return false;
@@ -89,6 +75,14 @@ function Dashboard() {
     alert("Redirect to Change Password page or modal.");
   };
 
+  if (loading) {
+    return <div className="loading-container">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="error-container">Error: {error}</div>;
+  }
+
   return (
     <div className="dashboard-layout">
       <Sidebar setView={setView} setSelectedDate={setSelectedDate} />
@@ -97,8 +91,16 @@ function Dashboard() {
         <div className="dashboard-header">
           <h2 className="dashboard-title">Financial Dashboard</h2>
           <div className="profile-section">
-            <button 
-              className="profile-icon" 
+            <CurrencySelector />
+            <button
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
+              style={{ marginRight: '1rem', padding: '0.5rem', cursor: 'pointer' }}
+            >
+              {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+            </button>
+            <button
+              className="profile-icon"
               onClick={() => setShowProfile(!showProfile)}
               aria-label="Profile menu"
             >
@@ -109,14 +111,14 @@ function Dashboard() {
                 <div className="profile-info">
                   <p className="profile-email">{userEmail || "Unknown"}</p>
                 </div>
-                <button 
-                  className="dropdown-btn" 
+                <button
+                  className="dropdown-btn"
                   onClick={handleChangePassword}
                 >
                   Change Password
                 </button>
-                <button 
-                  className="dropdown-btn logout-btn" 
+                <button
+                  className="dropdown-btn logout-btn"
                   onClick={handleLogout}
                 >
                   Logout
@@ -130,27 +132,27 @@ function Dashboard() {
           <div className="summary-card income-card">
             <div className="card-content">
               <h3 className="card-title">Income</h3>
-              <p className="card-amount">₹{income.toLocaleString()}</p>
+              <p className="card-amount">{formatAmount(income)}</p>
             </div>
             <div className="card-icon">
               {/* <span className="material-icons">trending_up</span> */}
             </div>
           </div>
-          
+
           <div className="summary-card expense-card">
             <div className="card-content">
               <h3 className="card-title">Expenses</h3>
-              <p className="card-amount">₹{expenses.toLocaleString()}</p>
+              <p className="card-amount">{formatAmount(expenses)}</p>
             </div>
             <div className="card-icon">
               {/* <span className="material-icons">trending_down</span> */}
             </div>
           </div>
-          
+
           <div className="summary-card balance-card">
             <div className="card-content">
               <h3 className="card-title">Balance</h3>
-              <p className="card-amount">₹{totalBalance.toLocaleString()}</p>
+              <p className="card-amount">{formatAmount(totalBalance)}</p>
             </div>
             <div className="card-icon">
               {/* <span className="material-icons">account_balance_wallet</span> */}
@@ -158,22 +160,24 @@ function Dashboard() {
           </div>
         </div>
 
+        <AIInsights />
+
         <div className="action-buttons">
-          <button 
+          <button
             className="history-button"
             onClick={() => navigate('/history')}
           >
             View Transaction History
           </button>
 
-          <button 
+          <button
             className="graphs-button"
             onClick={() => navigate('/graphs')}
           >
             View Graphs
           </button>
-          
-          <button 
+
+          <button
             className="add-button floating-action-btn"
             onClick={() => navigate('/add')}
             aria-label="Add transaction"
